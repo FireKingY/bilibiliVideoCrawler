@@ -6,6 +6,8 @@
 # See: http://doc.scrapy.org/en/latest/topics/item-pipeline.html
 
 
-class BilibilivideocrawlerPipeline(object):
+class VideoPipeline(object):
     def process_item(self, item, spider):
+        if item['view'] is '--':
+            item['view'] = 0
         return item

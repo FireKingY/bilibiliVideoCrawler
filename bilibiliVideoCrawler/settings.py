@@ -1,5 +1,6 @@
+#!/usr/bin/python3
 # -*- coding: utf-8 -*-
-
+import os
 # Scrapy settings for bilibiliVideoCrawler project
 #
 # For simplicity, this file contains only settings considered important or
@@ -13,7 +14,6 @@ BOT_NAME = 'bilibiliVideoCrawler'
 
 SPIDER_MODULES = ['bilibiliVideoCrawler.spiders']
 NEWSPIDER_MODULE = 'bilibiliVideoCrawler.spiders'
-
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
 #USER_AGENT = 'bilibiliVideoCrawler (+http://www.yourdomain.com)'
@@ -64,9 +64,9 @@ ROBOTSTXT_OBEY = True
 
 # Configure item pipelines
 # See http://scrapy.readthedocs.org/en/latest/topics/item-pipeline.html
-#ITEM_PIPELINES = {
-#    'bilibiliVideoCrawler.pipelines.BilibilivideocrawlerPipeline': 300,
-#}
+ITEM_PIPELINES = {
+   'bilibiliVideoCrawler.pipelines.VideoPipeline': 300,
+}
 
 # Enable and configure the AutoThrottle extension (disabled by default)
 # See http://doc.scrapy.org/en/latest/topics/autothrottle.html
@@ -88,3 +88,14 @@ ROBOTSTXT_OBEY = True
 #HTTPCACHE_DIR = 'httpcache'
 #HTTPCACHE_IGNORE_HTTP_CODES = []
 #HTTPCACHE_STORAGE = 'scrapy.extensions.httpcache.FilesystemCacheStorage'
+
+#log
+LOG_ENABLED = True
+LOG_ENCODING = 'utf-8'
+# LOG_STDOUT=True
+LOG_FILE = 'logs/spider.log'
+LOG_FORMAT = '%(levelname)s %(asctime)s [%(name)s:%(module)s:%(funcName)s:%(lineno)s] [%(exc_info)s] %(message)s'
+if not os.path.exists("logs"):
+    os.mkdir("logs")
+with open("logs/spider.log", 'w'):
+    pass
