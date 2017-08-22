@@ -105,3 +105,6 @@ ENV/
 
 # ToDoList
 ToDoList.txt
+
+# csv
+*.csv

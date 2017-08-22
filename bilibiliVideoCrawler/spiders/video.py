@@ -1,16 +1,21 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
-from scrapy import Spider
-from scrapy import Request
-from bilibiliVideoCrawler.items import VideoItem
 import json
 import logging
+import threading
+
+from scrapy import Request, Spider
+
+from bilibiliVideoCrawler import proxyCrawler
+from bilibiliVideoCrawler.items import VideoItem
+
+logging.basicConfig(level=logging.DEBUG)
 
 
 class VideoSpider(Spider):
     name = 'video'
-    url = 'https://api.bilibili.com/x/web-interface/archive/stat?callback=jQuery172009960371419769554_1503303631466&aid='
-    c_aid = 500000
+    url = 'https://api.bilibili.com/x/web-interface/archive/stat?aid='
+    c_aid = 123456
     header = {
         'Host':
         'api.bilibili.com',
@@ -27,11 +32,22 @@ class VideoSpider(Spider):
         'Accept-Language':
         'zh',
     }
+    proxy_pool = proxyCrawler.proxyPool()
+    auto_get = threading.Thread(
+        target=proxy_pool.auto_get, name='auto_get thread')
+
+    def __init__(self):
+        self.auto_get.start()
+        self.auto_get.join(5)
 
     def start_requests(self):
-        for i in range(0, 1):
+        for i in range(0, 5):
             self.c_aid += 1
-        yield Request(self.url + str(self.c_aid), headers=self.header)
+            yield Request(
+                self.url + str(self.c_aid),
+                callback=self.parse,
+                errback=self.errback,
+                headers=self.header)
 
     def parse(self, res):
         item = VideoItem()
@@ -40,7 +56,6 @@ class VideoSpider(Spider):
         except Exception as e:
             logging.error('Failed to parse, url:%s' % res.url)
             logging.error(res.body.decode('utf-8'))
-            raise e
             return
 
         item['aid'] = data['aid']
@@ -50,3 +65,13 @@ class VideoSpider(Spider):
         item['coin'] = data['coin']
         item['share'] = data['share']
         yield item
+
+    def errback(self, err):
+        logging.debug(
+            'Failed to crawl page:%s' % err.request.url.split('=')[-1])
+        yield Request(
+            err.request.url,
+            callback=self.parse,
+            errback=self.errback,
+            dont_filter=True,
+            headers=self.header)

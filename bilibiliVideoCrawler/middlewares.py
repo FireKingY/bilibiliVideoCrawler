@@ -6,6 +6,9 @@
 # http://doc.scrapy.org/en/latest/topics/spider-middleware.html
 
 from scrapy import signals
+import logging
+import time
+import random
 
 
 class BilibilivideocrawlerSpiderMiddleware(object):
@@ -54,3 +57,30 @@ class BilibilivideocrawlerSpiderMiddleware(object):
 
     def spider_opened(self, spider):
         spider.logger.info('Spider opened: %s' % spider.name)
+
+
+class RandProxy(object):
+    def process_request(self, request, spider):
+        proxy = spider.proxy_pool.rand_proxy()
+        if proxy is not None:
+            proxy = str(proxy[0]) + ':' + str(proxy[1])
+        else:
+            time.sleep(random.randint(0, 4) + 4)
+        logging.debug('using proxy: %s' % proxy)
+        request.meta['proxy'] = proxy
+
+
+class RandUA(object):
+    def __init__(self, ua_list):
+        self.ua_list = ua_list
+
+    @classmethod
+    def from_crawler(cls, crawler):
+        ua = crawler.settings['USER_AGENT_LIST']
+        return cls(ua)
+
+    def process_request(self, request, spider):
+        if self.ua_list:
+            ua = random.choice(self.ua_list)
+            logging.debug('using UA:%s' % ua)
+            request.headers.setdefault(b'User-Agent', ua)
